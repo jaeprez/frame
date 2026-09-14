@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05070a">
+<title>FRAME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--p:168 200 232;--w:226 185 106;--bg:#05070a}
+*{box-sizing:border-box;margin:0}
+html{background:var(--bg)}
+body{
+  font:400 13px/1.55 'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:rgb(var(--p));background:var(--bg);
+  -webkit-font-smoothing:antialiased;padding:10px;min-height:100dvh;
+}
+body.fx{text-shadow:0 0 8px rgb(var(--p)/.28)}
+body.fx::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9;
+  background:
+    repeating-linear-gradient(0deg,rgb(0 0 0/.2) 0 1px,transparent 1px 3px),
+    radial-gradient(ellipse at center,transparent 60%,rgb(0 0 0/.35));
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:1px solid rgb(var(--p)/.6);outline-offset:2px}
+
+.hud{
+  position:relative;border:1px solid rgb(var(--p)/.22);
+  min-height:calc(100dvh - 20px);display:flex;flex-direction:column;
+  padding:14px 14px 0;
+}
+.hud>i{position:absolute;width:10px;height:10px;border:0 solid rgb(var(--p))}
+.hud>i.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
+.hud>i.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
+.hud>i.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
+.hud>i.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+
+header{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:10px;border-bottom:1px solid rgb(var(--p)/.18);font-size:12px;
+}
+.brand{letter-spacing:.2em;font-weight:500}
+.hmeta span{margin-left:14px;color:rgb(var(--p)/.7)}
+.hmeta span:last-child{color:rgb(var(--p))}
+
+h2{
+  font-size:12px;font-weight:400;display:flex;align-items:center;gap:10px;
+  margin:18px 0 4px;color:rgb(var(--p)/.6);
+}
+h2 i{flex:1;height:1px;background:rgb(var(--p)/.14)}
+ul,ol{list-style:none;padding:0}
+
+.row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto 52px;
+  gap:12px;align-items:center;padding:6px 0;
+}
+.row.proto{grid-template-columns:minmax(0,1fr) auto 64px}
+.row.out{grid-template-columns:minmax(0,1fr) auto 40px}
+.name{all:unset;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.name::before{content:'▸ ';color:rgb(var(--p)/.45)}
+.row.open .name::before{content:'▾ '}
+.cad{color:rgb(var(--p)/.5);font-size:11px;white-space:nowrap}
+.strip{display:flex;gap:2px;align-items:center;height:10px}
+.strip i{width:6px;height:10px;border:1px solid rgb(var(--p)/.35)}
+.strip i.on{background:rgb(var(--p));border-color:rgb(var(--p))}
+.strip i.miss{border-color:rgb(var(--w)/.55)}
+.strip i.off{border:0;height:2px;background:rgb(var(--p)/.18)}
+.strip i.pre{visibility:hidden}
+.strip i.now{border-color:rgb(var(--p));animation:blink 1.6s steps(2) infinite}
+.bar{display:flex;gap:2px;align-items:center;height:8px}
+.bar i{width:5px;height:8px;background:rgb(var(--p)/.16)}
+.bar i.on{background:rgb(var(--p))}
+.st{text-align:right;font-size:11px;white-space:nowrap}
+.row.ok,.row.complete{opacity:.5}
+.row.idle{opacity:.45}
+.row.hold{opacity:.4}
+.row.lapsed .st{color:rgb(var(--w))}
+.row.empty .st,.row.blocked .st{color:rgb(var(--p)/.5)}
+@keyframes blink{50%{border-color:rgb(var(--p)/.25)}}
+
+.until{font-size:11px;color:rgb(var(--p)/.45);padding:0 0 6px 16px;margin-top:-4px}
+.detail{padding:0 0 10px 16px;font-size:12px;color:rgb(var(--p)/.7)}
+.detail .meta span{margin-right:14px}
+.acts{margin-top:4px}
+.acts button{all:unset;cursor:pointer;margin-right:12px;color:rgb(var(--p))}
+.steps{margin:2px 0 6px}
+.step{all:unset;display:block;cursor:pointer;padding:2px 0;color:rgb(var(--p))}
+.step.d{color:rgb(var(--p)/.45)}
+.feed div{padding:1px 0;display:flex;gap:8px}
+.feed b{font-weight:400;color:rgb(var(--p)/.45);flex:none;width:10px}
+.feed .q{color:rgb(var(--p)/.4)}
+.none{color:rgb(var(--p)/.45);padding:4px 0 4px 16px;font-size:12px}
+
+#logsec{flex:1;display:flex;flex-direction:column}
+#log{font-size:12px;padding-bottom:12px}
+#log li{display:flex;gap:10px;padding:1px 0;white-space:pre-wrap;word-break:break-word}
+#log .t{color:rgb(var(--p)/.4);flex:none}
+#log .cmd{color:rgb(var(--p)/.55)}
+#log .err{color:rgb(var(--w))}
+#log .sys{color:rgb(var(--p)/.8)}
+#log .help{color:rgb(var(--p)/.7)}
+
+#cmd{
+  position:sticky;bottom:0;background:var(--bg);margin:0 -14px;
+  padding:8px 14px calc(10px + env(safe-area-inset-bottom));
+  border-top:1px solid rgb(var(--p)/.18);z-index:5;
+}
+#hint{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-bottom:4px;min-height:17px}
+#hint button{all:unset;cursor:pointer;color:rgb(var(--p)/.6)}
+.line{display:flex;gap:8px;align-items:center}
+.ps{color:rgb(var(--p)/.6)}
+#in{all:unset;flex:1;min-width:0;color:rgb(var(--p));caret-color:rgb(var(--p));font-size:16px}
+@media (min-width:600px){#in{font-size:13px}.hud{max-width:720px;margin:0 auto}}
+@media (prefers-reduced-motion:reduce){.strip i.now{animation:none}}
+</style>
+</head>
+<body class="fx">
+<div class="hud">
+  <i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+  <header>
+    <span class="brand">FRAME</span>
+    <span class="hmeta"><span id="hdate"></span><span id="hday"></span><span id="hsys"></span></span>
+  </header>
+  <main>
+    <section id="osec">
+      <h2><span>outcomes</span><i></i><span id="oc">0</span></h2>
+      <ul id="olist"></ul>
+    </section>
+    <section>
+      <h2><span>programs</span><i></i><span id="pc">0</span></h2>
+      <ul id="plist"></ul>
+    </section>
+    <section>
+      <h2><span>protocols</span><i></i><span id="rc">0</span></h2>
+      <ul id="rlist"></ul>
+    </section>
+    <section id="logsec">
+      <h2><span>log</span><i></i></h2>
+      <ol id="log"></ol>
+    </section>
+  </main>
+  <form id="cmd" autocomplete="off">
+    <div id="hint"></div>
+    <div class="line">
+      <span class="ps">&gt;</span>
+      <input id="in" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="command">
+    </div>
+  </form>
+  <input id="file" type="file" accept="application/json" hidden>
+</div>
+<script>
+(()=>{
+const KEY='frame.v1', BUILD=2;
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const DAYS=['sun','mon','tue','wed','thu','fri','sat'];
+const MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseD=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const today=()=>dkey(new Date());
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return dkey(d)};
+const wd=s=>parseD(s).getDay();
+const weekStart=s=>addDays(s,-((wd(s)+6)%7));
+const fmtDate=s=>{const d=parseD(s);return `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`};
+const uid=()=>Math.random().toString(36).slice(2,8);
+const now=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const THEMES={ice:'168 200 232',mint:'159 220 176',amber:'226 185 106',paper:'216 211 200'};
+
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+const fresh=!S;
+if(!S)S={created:today(),build:BUILD,theme:'ice',fx:true,lastOpen:null,outcomes:[],programs:[],protocols:[],log:[]};
+migrate(S);
+function migrate(s){
+  s.outcomes=s.outcomes||[];s.programs=s.programs||[];s.protocols=s.protocols||[];s.log=s.log||[];
+  [...s.programs,...s.protocols].forEach(i=>{if(!('out' in i))i.out=null;if(!('until' in i))i.until=null});
+  if((s.build||1)<2&&(!s.theme||s.theme==='mint'))s.theme='ice';
+  s.build=BUILD;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const open=new Set();
+let pendRm=null, hist=[], hi=-1;
+
+/* ---- program logic ---- */
+const isDue=(p,d)=>p.cad==='daily'||p.cad==='weekly'||p.cad.includes(wd(d));
+const doneOn=(p,d)=>p.log.includes(d);
+const doneWeek=(p,d)=>{const ws=weekStart(d);return p.log.some(x=>x>=ws&&x<=d)};
+const satisfied=(p,d)=>p.cad==='weekly'?doneWeek(p,d):doneOn(p,d);
+
+function streak(p){
+  const t=today();let n=0;
+  if(p.cad==='weekly'){
+    let ws=weekStart(t); if(!doneWeek(p,t)) ws=addDays(ws,-7);
+    while(ws>=weekStart(p.created)&&p.log.some(x=>x>=ws&&x<addDays(ws,7))){n++;ws=addDays(ws,-7)}
+    return n;
+  }
+  let d=doneOn(p,t)?t:addDays(t,-1);
+  while(d>=p.created){ if(isDue(p,d)){ if(doneOn(p,d))n++; else break } d=addDays(d,-1) }
+  return n;
+}
+function lapsed(p){
+  const t=today(); if(satisfied(p,t))return false;
+  if(p.cad==='weekly'){
+    const ws=weekStart(t);
+    for(let i=1;i<=2;i++){const a=addDays(ws,-7*i),b=addDays(ws,-7*(i-1));
+      if(a<weekStart(p.created))return false; if(p.log.some(x=>x>=a&&x<b))return false}
+    return true;
+  }
+  let d=addDays(t,-1),seen=0;
+  while(d>=p.created&&seen<3){ if(isDue(p,d)){ if(doneOn(p,d))return false; seen++ } d=addDays(d,-1) }
+  return seen===3;
+}
+function status(p){
+  const t=today();
+  if(p.state==='hold')return 'hold';
+  if(satisfied(p,t))return 'ok';
+  if(lapsed(p))return 'lapsed';
+  if(isDue(p,t))return 'due';
+  return 'idle';
+}
+function strip(p){
+  let h='',t=today();
+  for(let i=6;i>=0;i--){
+    const d=addDays(t,-i);let c;
+    if(d<p.created)c='pre';
+    else if(doneOn(p,d))c='on';
+    else if(p.cad==='weekly'||!isDue(p,d))c='off';
+    else if(i===0)c=p.state==='hold'?'off':'now';
+    else c='miss';
+    h+=`<i class="${c}"></i>`;
+  }
+  return h;
+}
+const cadLabel=p=>p.cad==='daily'?'daily':p.cad==='weekly'?'weekly':p.cad.map(i=>DAYS[i][0]).join(' ');
+
+/* held-for-x-days, adherence 0..1 */
+function adherence(p){
+  const t=today();
+  if(p.cad==='weekly'){
+    let hit=0,wk=0;
+    for(let i=0;i<4;i++){const a=addDays(weekStart(t),-7*i);
+      if(addDays(a,6)<p.created)break; wk++; if(p.log.some(x=>x>=a&&x<addDays(a,7)))hit++}
+    return wk?hit/wk:0;
+  }
+  let due=0,hit=0;
+  for(let i=0;i<14;i++){const d=addDays(t,-i); if(d<p.created)break;
+    if(isDue(p,d)){due++;if(doneOn(p,d))hit++}}
+  return due?hit/due:0;
+}
+
+/* ---- protocol logic ---- */
+function pstatus(r){
+  if(r.state==='hold')return r.until?'blocked':'hold';
+  if(!r.steps.length)return 'empty';
+  if(r.steps.every(s=>s.done))return 'complete';
+  return 'open';
+}
+const nextStep=r=>r.steps.find(s=>!s.done);
+
+/* ---- outcome logic ---- */
+const kids=o=>[...S.programs.filter(p=>p.out===o.id).map(p=>({kind:'p',o:p})),
+               ...S.protocols.filter(r=>r.out===o.id).map(r=>({kind:'r',o:r}))];
+function progress(o){
+  const list=kids(o).filter(i=>i.o.state!=='hold');
+  if(!list.length)return null;
+  const sum=list.reduce((a,i)=>a+(i.kind==='p'?adherence(i.o)
+    :(i.o.steps.length?i.o.steps.filter(s=>s.done).length/i.o.steps.length:0)),0);
+  return sum/list.length;
+}
+function bar(v){let h='';const n=Math.round(v*10);for(let i=0;i<10;i++)h+=`<i class="${i<n?'on':''}"></i>`;return h}
+
+/* ---- render ---- */
+function render(){
+  const t=today();
+  $('#hdate').textContent=fmtDate(t);
+  const dayN=Math.round((parseD(t)-parseD(S.created))/864e5)+1;
+  $('#hday').textContent='day '+String(dayN).padStart(3,'0');
+  const act=S.programs.filter(p=>p.state!=='hold'&&isDue(p,t));
+  $('#hsys').textContent=`${act.filter(p=>satisfied(p,t)).length}/${act.length}`;
+  $('#oc').textContent=S.outcomes.length;
+  $('#pc').textContent=S.programs.length;
+  $('#rc').textContent=S.protocols.length;
+
+  $('#olist').innerHTML=S.outcomes.length?S.outcomes.map(o=>{
+    const v=progress(o),k=kids(o),held=k.filter(i=>i.o.state==='hold');
+    const done=v!==null&&v>=1;
+    return `<li class="row out ${v===null?'empty':done?'complete':'open'}${open.has(o.id)?' open':''}" data-id="${o.id}">
+      <button class="name">${esc(o.name)}</button>
+      <span class="bar">${v===null?'':bar(v)}</span>
+      <span class="st">${v===null?'—':Math.round(v*100)+'%'}</span></li>`+(open.has(o.id)?`
+    <li class="detail" data-id="${o.id}">
+      <div class="feed">${k.length?k.map(i=>{
+        if(i.o.state==='hold')return `<div class="q"><b>·</b><span>${esc(i.o.name)} — ${i.o.until?'until '+esc(i.o.until):'on hold'}</span></div>`;
+        if(i.kind==='r'){const s=nextStep(i.o);
+          return `<div><b>${s?'›':'✓'}</b><span>${esc(i.o.name)}${s?' — '+esc(s.t):' — complete'}</span></div>`}
+        const st=status(i.o);
+        return `<div><b>${st==='ok'?'✓':'›'}</b><span>${esc(i.o.name)} — ${st==='ok'?'kept today':st==='idle'?'not due today':st} · ${Math.round(adherence(i.o)*100)}%</span></div>`;
+      }).join(''):'<div class="q"><span>nothing linked yet</span></div>'}</div>
+      <div class="meta"><span>${k.length-held.length} active</span>${held.length?`<span>${held.length} waiting</span>`:''}</div>
+      <div class="acts"><button data-a="linkto">[+ link]</button><button data-a="rm">[rm]</button></div></li>`:'');
+  }).join(''):`<li class="none">none. try: outcome build muscle</li>`;
+
+  $('#plist').innerHTML=S.programs.length?S.programs.map(p=>{
+    const st=status(p),o=open.has(p.id),done=satisfied(p,t);
+    return `<li class="row ${st}${o?' open':''}" data-id="${p.id}">
+      <button class="name">${esc(p.name)}</button>
+      <span class="cad">${cadLabel(p)}</span>
+      <span class="strip">${strip(p)}</span>
+      <span class="st">${st}</span></li>`
+    +(p.state==='hold'&&p.until?`<li class="until">until ${esc(p.until)}</li>`:'')
+    +(o?`
+    <li class="detail" data-id="${p.id}">
+      <div class="meta"><span>streak ${streak(p)}</span><span>runs ${p.log.length}</span><span>${Math.round(adherence(p)*100)}% kept</span>${p.out?`<span>${esc(outName(p.out))}</span>`:''}</div>
+      <div class="acts">
+        <button data-a="${done?'undo':'run'}">[${done?'undo':'run'}]</button>
+        <button data-a="${p.state==='hold'?'resume':'hold'}">[${p.state==='hold'?'resume':'hold'}]</button>
+        <button data-a="${p.out?'unlink':'link'}">[${p.out?'unlink':'link'}]</button>
+        <button data-a="rm">[rm]</button>
+      </div></li>`:'');
+  }).join(''):`<li class="none">none. try: program push-ups daily</li>`;
+
+  $('#rlist').innerHTML=S.protocols.length?S.protocols.map(r=>{
+    const st=pstatus(r),o=open.has(r.id),d=r.steps.filter(s=>s.done).length;
+    return `<li class="row proto ${st}${o?' open':''}" data-id="${r.id}">
+      <button class="name">${esc(r.name)}</button>
+      <span class="cad">${r.steps.length?d+'/'+r.steps.length:''}</span>
+      <span class="st">${st}</span></li>`
+    +(r.state==='hold'&&r.until?`<li class="until">until ${esc(r.until)}</li>`:'')
+    +(o?`
+    <li class="detail" data-id="${r.id}">
+      <div class="steps">${r.steps.map((s,i)=>`<button class="step${s.done?' d':''}" data-i="${i}">[${s.done?'x':' '}] ${esc(s.t)}</button>`).join('')||'<span>no steps yet</span>'}</div>
+      ${r.out?`<div class="meta"><span>${esc(outName(r.out))}</span></div>`:''}
+      <div class="acts">
+        <button data-a="addstep">[+ step]</button>
+        <button data-a="${r.state==='hold'?'resume':'hold'}">[${r.state==='hold'?'resume':'hold'}]</button>
+        <button data-a="${r.out?'unlink':'link'}">[${r.out?'unlink':'link'}]</button>
+        <button data-a="rm">[rm]</button>
+      </div></li>`:'');
+  }).join(''):`<li class="none">none. try: protocol drivers license</li>`;
+
+  renderLog();
+}
+const outName=id=>(S.outcomes.find(o=>o.id===id)||{}).name||'';
+function renderLog(){
+  $('#log').innerHTML=S.log.map(l=>`<li class="${l.k}"><span class="t">${l.t}</span><span>${esc(l.x)}</span></li>`).join('');
+}
+function say(x,k='out'){
+  S.log.push({t:now(),x,k});
+  if(S.log.length>80)S.log=S.log.slice(-80);
+  renderLog();
+  requestAnimationFrame(()=>window.scrollTo(0,document.body.scrollHeight));
+}
+
+/* ---- lookup ---- */
+const items=()=>[...S.programs.map(o=>({kind:'p',o})),...S.protocols.map(o=>({kind:'r',o}))];
+const all=()=>[...items(),...S.outcomes.map(o=>({kind:'o',o}))];
+const names=()=>all().map(i=>i.o.name);
+function find(q,pool){
+  q=(q||'').trim().toLowerCase(); if(!q)return {err:'name?'};
+  const list=pool||all();
+  const ex=list.find(i=>i.o.name.toLowerCase()===q); if(ex)return ex;
+  for(const f of [i=>i.o.name.toLowerCase().startsWith(q),i=>i.o.name.toLowerCase().includes(q)]){
+    const m=list.filter(f);
+    if(m.length===1)return m[0];
+    if(m.length>1)return {err:'ambiguous: '+m.map(i=>i.o.name).join(', ')};
+  }
+  return {err:'no match: '+q};
+}
+function splitName(toks){
+  for(let i=toks.length-1;i>=1;i--){
+    const n=toks.slice(0,i).join(' ').toLowerCase();
+    if(names().some(x=>x.toLowerCase()===n))return [toks.slice(0,i).join(' '),toks.slice(i).join(' ')];
+  }
+  return [toks[0]||'',toks.slice(1).join(' ')];
+}
+
+/* ---- commands ---- */
+const VERBS=['outcome','program','protocol','step','link','unlink','run','undo','hold','resume','rm','theme','fx','export','import','clear','help','ver'];
+const NAMEVERBS=['run','undo','hold','resume','rm','unlink'];
+
+function exec(raw){
+  const line=raw.trim(); if(!line)return;
+  say('> '+line,'cmd');
+  const toks=line.split(/\s+/),v=toks[0].toLowerCase(),rest=toks.slice(1),arg=rest.join(' ');
+  if(v!=='rm')pendRm=null;
+  switch(v){
+    case 'outcome':{
+      if(!arg){say('usage: outcome <name>','err');break}
+      if(names().some(n=>n.toLowerCase()===arg.toLowerCase())){say('already exists: '+arg,'err');break}
+      S.outcomes.push({id:uid(),name:arg,created:today()});
+      say(`outcome set: ${arg}. link work to it with: link <name> to ${arg}`);break}
+    case 'program':{
+      let cad='daily',nameToks=[...rest];
+      const last=nameToks[nameToks.length-1]?.toLowerCase();
+      if(last==='daily'||last==='weekly'){cad=last;nameToks.pop()}
+      else{const days=[];while(nameToks.length&&DAYS.includes(nameToks[nameToks.length-1].toLowerCase()))days.unshift(DAYS.indexOf(nameToks.pop().toLowerCase()));if(days.length)cad=[...new Set(days)].sort()}
+      const name=nameToks.join(' ');
+      if(!name){say('usage: program <name> [daily|weekly|mon tue…]','err');break}
+      if(names().some(n=>n.toLowerCase()===name.toLowerCase())){say('already exists: '+name,'err');break}
+      S.programs.push({id:uid(),name,cad,state:'active',log:[],created:today(),out:null,until:null});
+      say(`program online: ${name} (${cad==='daily'?'daily':cad==='weekly'?'weekly':'custom days'})`);break}
+    case 'protocol':{
+      if(!arg){say('usage: protocol <name>','err');break}
+      if(names().some(n=>n.toLowerCase()===arg.toLowerCase())){say('already exists: '+arg,'err');break}
+      S.protocols.push({id:uid(),name:arg,steps:[],state:'active',created:today(),out:null,until:null});
+      say(`protocol opened: ${arg}. add steps with: step ${arg} <text>`);break}
+    case 'step':{
+      const [n,text]=splitName(rest);
+      const f=find(n); if(f.err){say(f.err,'err');break}
+      if(f.kind!=='r'){say(f.o.name+' is not a protocol','err');break}
+      if(!text){say('usage: step <protocol> <text>','err');break}
+      f.o.steps.push({t:text,done:false}); open.add(f.o.id);
+      say(`${f.o.name}: step ${f.o.steps.length} added`);break}
+    case 'link':{
+      const opool=S.outcomes.map(x=>({kind:'o',o:x}));
+      const cuts=[];rest.forEach((w,i)=>{if(w.toLowerCase()==='to'&&i>0&&i<rest.length-1)cuts.push(i)});
+      if(!cuts.length){say('usage: link <program|protocol> to <outcome>','err');break}
+      let f=null,o=null;
+      for(const c of cuts){
+        const a=find(rest.slice(0,c).join(' '),items()),b=find(rest.slice(c+1).join(' '),opool);
+        if(!a.err&&!b.err){f=a;o=b;break}
+        if(!f){f=a;o=b}
+      }
+      if(f.err){say(f.err,'err');break}
+      if(o.err){say(o.err,'err');break}
+      f.o.out=o.o.id; open.add(o.o.id);
+      say(`${f.o.name} → ${o.o.name}`);break}
+    case 'unlink':{
+      const f=find(arg,items()); if(f.err){say(f.err,'err');break}
+      if(!f.o.out){say(f.o.name+' is not linked','sys');break}
+      const was=outName(f.o.out);f.o.out=null;say(`${f.o.name} unlinked from ${was}`);break}
+    case 'run':{
+      const f=find(arg,items()); if(f.err){say(f.err,'err');break}
+      if(f.o.state==='hold'){say(`${f.o.name} is on hold${f.o.until?' until '+f.o.until:''}. resume it first`,'sys');break}
+      doRun(f);break}
+    case 'undo':{
+      const f=find(arg,items()); if(f.err){say(f.err,'err');break}
+      doUndo(f);break}
+    case 'hold':{
+      const m=arg.match(/^(.*?)(?:\s+until\s+(.*))?$/i);
+      const f=find(m[1],items()); if(f.err){say(f.err,'err');break}
+      f.o.state='hold';f.o.until=m[2]||null;
+      say(`${f.o.name}: holding${m[2]?' until '+m[2]:''}`);break}
+    case 'resume':{
+      const f=find(arg,items()); if(f.err){say(f.err,'err');break}
+      const why=f.o.until;f.o.state='active';f.o.until=null;
+      if(f.kind==='p')say(`${f.o.name}: live again${why?' — '+why+' cleared':''}. ${status(f.o)==='due'?'due today':'next up '+cadLabel(f.o)}`);
+      else{const s=nextStep(f.o);say(`${f.o.name}: live again${why?' — '+why+' cleared':''}. ${s?'next: '+s.t:'no steps yet'}`)}
+      break}
+    case 'rm':{
+      const f=find(arg); if(f.err){say(f.err,'err');break}
+      if(pendRm===f.o.id){
+        if(f.kind==='p')S.programs=S.programs.filter(x=>x.id!==f.o.id);
+        else if(f.kind==='r')S.protocols=S.protocols.filter(x=>x.id!==f.o.id);
+        else{items().forEach(i=>{if(i.o.out===f.o.id)i.o.out=null});S.outcomes=S.outcomes.filter(x=>x.id!==f.o.id)}
+        open.delete(f.o.id);pendRm=null;say(`removed: ${f.o.name}`);
+      }else{pendRm=f.o.id;say(`remove ${f.o.name}? run rm again to confirm`,'sys')}
+      break}
+    case 'theme':{
+      const k=arg.toLowerCase();
+      if(!THEMES[k]){say('themes: '+Object.keys(THEMES).join(', '),'err');break}
+      S.theme=k;applyTheme();say('theme: '+k);break}
+    case 'fx':{
+      if(arg==='on')S.fx=true;else if(arg==='off')S.fx=false;else{say('usage: fx on|off','err');break}
+      applyTheme();say('fx '+(S.fx?'on':'off'));break}
+    case 'export':{
+      const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`frame-${today()}.json`;a.click();
+      say('exported');break}
+    case 'import':$('#file').click();break;
+    case 'clear':S.log=[];break;
+    case 'ver':say(`FRAME build ${BUILD}. ${S.outcomes.length} outcomes, ${S.programs.length} programs, ${S.protocols.length} protocols, since ${fmtDate(S.created)}`,'sys');break;
+    case 'help':
+      [ 'outcome <name>              what the work is for',
+        'program <name> [daily|weekly|mon wed fri]',
+        'protocol <name>             then: step <protocol> <text>',
+        'link <name> to <outcome>    /  unlink <name>',
+        'run <name>                  log today / check next step',
+        'undo <name>',
+        'hold <name> until <reason>  /  resume <name>',
+        'rm <name>                   removes, asks twice',
+        'theme ice|mint|amber|paper  ·  fx on|off',
+        'export / import / clear / ver',
+        'or tap any name to open it'].forEach(l=>say(l,'help'));
+      break;
+    default:say(`unknown: ${v}. type help`,'err');
+  }
+  save();render();
+}
+function doRun(f){
+  const t=today();
+  if(f.kind==='p'){
+    const p=f.o;
+    if(doneOn(p,t)){say(p.name+': already logged today','sys');return}
+    p.log.push(t);p.log.sort();
+    say(`${p.name}: logged. streak ${streak(p)}`+outNote(p));
+  }else{
+    const r=f.o,i=r.steps.findIndex(s=>!s.done);
+    if(i<0){say(r.name+': all steps done','sys');return}
+    r.steps[i].done=true;
+    const left=r.steps.filter(s=>!s.done).length;
+    say(`${r.name}: step ${i+1} done. ${left?left+' left':'complete'}`+outNote(r));
+  }
+}
+function outNote(i){
+  if(!i.out)return '';
+  const o=S.outcomes.find(x=>x.id===i.out);if(!o)return '';
+  const v=progress(o);return v===null?'':`  ·  ${o.name} ${Math.round(v*100)}%`;
+}
+function doUndo(f){
+  const t=today();
+  if(f.kind==='p'){
+    const p=f.o;
+    if(!doneOn(p,t)){say(p.name+': nothing logged today','sys');return}
+    p.log=p.log.filter(d=>d!==t);say(p.name+': today unlogged');
+  }else{
+    const r=f.o;let i=-1;r.steps.forEach((s,j)=>{if(s.done)i=j});
+    if(i<0){say(r.name+': nothing to undo','sys');return}
+    r.steps[i].done=false;say(`${r.name}: step ${i+1} reopened`);
+  }
+}
+
+/* ---- ui wiring ---- */
+const inp=$('#in');
+$('#cmd').addEventListener('submit',e=>{
+  e.preventDefault();const v=inp.value;
+  if(v.trim()){hist.push(v);if(hist.length>30)hist.shift()}
+  hi=hist.length;inp.value='';hint('');exec(v);
+});
+inp.addEventListener('input',()=>hint(inp.value));
+inp.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'){e.preventDefault();if(hi>0){hi--;inp.value=hist[hi];hint(inp.value)}}
+  if(e.key==='ArrowDown'){e.preventDefault();if(hi<hist.length-1){hi++;inp.value=hist[hi]}else{hi=hist.length;inp.value=''}hint(inp.value)}
+});
+function hint(val){
+  const raw=val.trimStart(),toks=raw.split(/\s+/),v=toks[0].toLowerCase();let list=[];
+  const itemNames=()=>items().map(i=>i.o.name),outNames=()=>S.outcomes.map(o=>o.name);
+  if(toks.length===1){list=v?VERBS.filter(x=>x.startsWith(v)&&x!==v):[]}
+  else if(v==='link'){
+    const m=raw.match(/^link\s+(.*?)\s+to\s*(.*)$/i);
+    if(m)list=outNames().filter(n=>n.toLowerCase().includes(m[2].toLowerCase())).map(n=>`link ${m[1]} to ${n}`);
+    else{const q=toks.slice(1).join(' ').toLowerCase();
+      list=itemNames().filter(n=>n.toLowerCase().includes(q)).map(n=>`link ${n} to`)}
+  }
+  else if(v==='hold'&&/\suntil\s?$/i.test(raw))list=[];
+  else if(NAMEVERBS.includes(v)){
+    const q=toks.slice(1).join(' ').toLowerCase();
+    if(!names().some(n=>n.toLowerCase()===q))list=names().filter(n=>n.toLowerCase().includes(q)).map(n=>v+' '+n);
+  }
+  else if(v==='theme')list=Object.keys(THEMES).map(t=>'theme '+t);
+  else if(v==='program'&&toks.length>=2){const l=toks[toks.length-1].toLowerCase();
+    if(l&&('daily'.startsWith(l)||'weekly'.startsWith(l)))list=['daily','weekly'].filter(x=>x.startsWith(l)).map(x=>toks.slice(0,-1).join(' ')+' '+x)}
+  $('#hint').innerHTML=list.slice(0,5).map(s=>`<button type="button" data-v="${esc(s)}">${esc(s)}</button>`).join('');
+}
+$('#hint').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  inp.value=b.dataset.v+' ';inp.focus();hint(inp.value);
+});
+document.querySelector('main').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const li=b.closest('li');const id=li?.dataset.id;if(!id)return;
+  const f=all().find(i=>i.o.id===id);if(!f)return;
+  if(b.classList.contains('name')){open.has(id)?open.delete(id):open.add(id);render();return}
+  if(b.classList.contains('step')){const s=f.o.steps[+b.dataset.i];s.done=!s.done;save();render();return}
+  const a=b.dataset.a;
+  const fill=v=>{inp.value=v;inp.focus();hint(inp.value)};
+  if(a==='addstep')return fill(`step ${f.o.name} `);
+  if(a==='rm')return fill(`rm ${f.o.name}`);
+  if(a==='hold')return fill(`hold ${f.o.name} until `);
+  if(a==='link')return fill(`link ${f.o.name} to `);
+  if(a==='linkto')return fill(`link `);
+  exec(`${a} ${f.o.name}`);
+});
+$('#file').addEventListener('change',e=>{
+  const fl=e.target.files[0];if(!fl)return;
+  fl.text().then(txt=>{
+    try{const d=JSON.parse(txt);if(!Array.isArray(d.programs)||!Array.isArray(d.protocols))throw 0;
+      S={...S,...d};migrate(S);save();applyTheme();render();
+      say(`imported ${S.outcomes.length} outcomes, ${S.programs.length} programs, ${S.protocols.length} protocols`,'sys')}
+    catch{say('import failed: not a frame export','err')}
+  });e.target.value='';
+});
+function applyTheme(){
+  document.documentElement.style.setProperty('--p',THEMES[S.theme]||THEMES.ice);
+  document.body.classList.toggle('fx',!!S.fx);
+}
+
+/* ---- boot ---- */
+applyTheme();render();
+(async()=>{
+  const t=today();
+  if(fresh){
+    for(const x of [`FRAME  build ${BUILD}`,'memory ........ clear','outcomes ...... 0','programs ...... 0','protocols ..... 0','ready. type help']){
+      say(x,'sys');await sleep(reduced?0:220);
+    }
+  }else if(S.lastOpen!==t){
+    const due=S.programs.filter(p=>p.state!=='hold'&&isDue(p,t)&&!satisfied(p,t)).length;
+    const wait=items().filter(i=>i.o.state==='hold'&&i.o.until).length;
+    say(`${fmtDate(t)}. ${due} due${wait?`, ${wait} waiting`:''}`,'sys');
+  }
+  S.lastOpen=t;save();
+})();
+})();
+</script>
+</body>
+</html>
