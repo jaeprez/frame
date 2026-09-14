@@ -1,0 +1,31 @@
+{
+  "name": "FRAME",
+  "short_name": "FRAME",
+  "description": "Programs and protocols for the self.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0C0E",
+  "theme_color": "#0A0C0E",
+  "icons": [
+    {
+      "src": "icons/frame-icon-b-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/frame-icon-b-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/frame-icon-b-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
